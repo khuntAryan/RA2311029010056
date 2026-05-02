@@ -16,7 +16,7 @@ Custom logging middleware
 Clean error handling
 How to Run
 node vehicle_scheduler/scheduler.js
-📸 Output Screenshots
+Output Screenshots
 Scheduler Output
 
 Logging Middleware
@@ -28,10 +28,6 @@ Notes
 No hardcoded depots or vehicles
 Data is fully API-driven
 Logging follows required format (stack, level, package, message)
-Sample Output
-Depot 2 → Max Impact: 157
-Depot 3 → Max Impact: 157
-Depot 4 → Max Impact: 143
-Depot 5 → Max Impact: 157
+
 
 <img width="996" height="352" alt="Screenshot 2026-05-02 at 12 21 35 PM" src="https://github.com/user-attachments/assets/457858cb-c645-47d7-968e-68975f6c571f" />
