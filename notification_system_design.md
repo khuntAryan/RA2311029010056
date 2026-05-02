@@ -206,3 +206,106 @@ Stage 3 Status
  Optimized version provided
  Index strategy explained
  Additional query handled
+
+
+Stage 4 — Performance Optimization
+Problem
+
+Notifications are fetched on every page load for every student.
+
+Issues:
+
+High DB load
+Increased latency
+Poor user experience
+
+Solutions
+1. Caching (Redis)
+Store recent notifications in cache
+Serve from cache instead of DB
+Flow:
+First request → DB → store in cache
+Next requests → directly from cache
+
+Pros:
+Very fast response
+Reduces DB load
+Cons:
+Cache invalidation complexity
+Slight data staleness
+
+2. Pagination & Lazy Loading
+Fetch limited notifications (e.g., 10–20)
+Load more only when needed
+
+Pros:
+Less data transfer
+Faster UI
+Cons:
+Multiple API calls
+
+3. Real-Time Push (WebSockets)
+Push notifications instead of fetching repeatedly
+
+Pros:
+No unnecessary API calls
+Instant updates
+Cons:
+Complex implementation
+Requires persistent connections
+
+4. Background Processing (Queue)
+Use message queue (Kafka / RabbitMQ)
+Process notifications asynchronously
+
+Pros:
+Smooth system load
+Scalable
+Cons:
+Adds system complexity
+
+5. Read Replica Database
+Use replica DB for read operations
+
+Pros:
+Reduces load on primary DB
+Improves scalability
+Cons:
+Slight replication delay
+
+6. Precomputed Feeds
+Store pre-sorted notifications per user
+
+Pros:
+Faster reads
+No heavy computation at runtime
+Cons:
+Extra storage
+Update complexity
+
+Recommended Approach
+
+Use combination of:
+
+Redis caching
+Pagination
+WebSockets (for real-time)
+
+This gives:
+
+Fast response
+Low DB load
+Real-time experience
+
+Final Impact
+Reduced DB queries
+Faster response time
+Better scalability
+Improved user experience
+
+Stage 4 Status
+
+Problem identified
+Multiple solutions proposed
+Trade-offs explained
+Final architecture suggested
