@@ -1,5 +1,6 @@
 const axios = require("axios");
 require("dotenv").config();
+const { Log, setToken } = require("./logging_middleware/logger");
 
 let accessToken = "";
 
@@ -43,7 +44,8 @@ function getAuthHeader() {
       const token = await getToken("66272e2d-d27b-4084-81ae-d592001e3282", "QNEexVRUTGKpjDPr");
   
       console.log("Access Token:", token);
-  
+      setToken(token);
+      await Log("backend", "info", "controller", "Testing logging middleware");
       await testDepots(); // 👈 add this
   
     } catch (err) {
