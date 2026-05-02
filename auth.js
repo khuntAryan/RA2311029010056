@@ -46,7 +46,7 @@ function getAuthHeader() {
       console.log("Access Token:", token);
       setToken(token);
       await Log("backend", "info", "controller", "Testing logging middleware");
-      await testDepots(); // 👈 add this
+      await testDepots(); 
   
     } catch (err) {
       console.error(err.response?.data || err.message);

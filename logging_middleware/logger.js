@@ -3,7 +3,7 @@ require("dotenv").config();
 
 let accessToken = "";
 
-// You will set token from auth.js
+// using auth js for token 
 function setToken(token) {
   accessToken = token;
 }

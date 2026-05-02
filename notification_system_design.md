@@ -3,15 +3,16 @@ Notification System API Design
 Base URL
 http://localhost:3000/api
 
-1. Get All Notifications
-Endpoint
+1 Get All Notifications
+Endpoint:
 GET /notifications
 Query Params (optional)
-type → placement / result / event
-limit → number of results
-page → pagination
+type : placement / result / event
+limit : number of results
+page : pagination
 
-Response
+Response:
+
 {
   "notifications": [
     {
@@ -24,52 +25,58 @@ Response
   ]
 }
 
-2. Create Notification
-Endpoint
+2 Create Notification
+Endpoint:
+
 POST /notifications
-Request Body
+Request Body:
+
 {
   "type": "Placement",
   "message": "Google hiring"
 }
-Response
+Response:
 {
   "message": "Notification created",
   "notificationId": "uuid"
 }
 
-3. Mark Notification as Read
-Endpoint
+
+3  Mark Notification as Read
+Endpoint:
+
 PATCH /notifications/:id/read
-Response
+Response:
 {
   "message": "Notification marked as read"
 }
 
-4. Get Unread Notifications
-Endpoint
+4 Get Unread Notifications
+Endpoint:
 GET /notifications/unread
-Response
+
+Response:
+
 {
   "notifications": [ ... ]
 }
 
-5. Delete Notification
-Endpoint
+5 Delete Notification
+Endpoint:
 DELETE /notifications/:id
-Response
+Response:
 {
   "message": "Notification deleted"
 }
 
-Real-Time Notification Strategy
+Real-Time Notification Strategy:
 
-Option 1: WebSockets (Recommended)
+Option 1: WebSockets 
 Persistent connection
 Instant updates
 Best for real-time apps
 
-Option 2: Server-Sent Events (SSE)
+Option 2: Server-Sent Events
 Lightweight alternative
 One-way communication
 
@@ -84,17 +91,12 @@ Pagination for scalability
 isRead flag for filtering
 Timestamp for sorting
 
-Stage 1 Status
 
-Complete API structure
-Covers CRUD operations
-Includes real-time approach
-
-Stage 2 — Database Design
+Stage 2 Database Design
 Chosen Database
-PostgreSQL (Relational DB)
+PostgreSQL 
 
-Schema Design
+Schema Design:
 Table: notifications
 CREATE TABLE notifications (
   id UUID PRIMARY KEY,
@@ -105,22 +107,22 @@ CREATE TABLE notifications (
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-Indexing (Important for performance)
+Indexing 
 CREATE INDEX idx_user_read ON notifications(userId, isRead);
 CREATE INDEX idx_created_at ON notifications(createdAt DESC);
 CREATE INDEX idx_type ON notifications(type);
 
 Problems as Data Grows
-Millions of rows → slow queries
+Millions of rows -> slow queries
 Sorting (ORDER BY createdAt) becomes expensive
 Filtering unread notifications slows down
 DB gets overloaded with frequent reads
 
 Solutions
-1. Index Optimization
+1 Index Optimization
 Faster filtering on userId, isRead
 Speeds up unread queries
-2. Pagination
+2 Pagination
 SELECT * FROM notifications
 WHERE userId = 'xyz'
 ORDER BY createdAt DESC
@@ -128,13 +130,13 @@ LIMIT 20 OFFSET 0;
 
 Avoid loading all data at once
 
-3. Caching (Redis)
+3 Caching 
 Store recent notifications in cache
 Reduce DB hits
-4. Partitioning
+4 Partitioning
 Split table by userId or date
 Improves query speed
-5. Archiving Old Data
+5 Archiving Old Data
 Move old notifications to separate table
 Keep main table small
 
@@ -145,13 +147,6 @@ Supports indexing + scaling
 Easy querying with SQL
 
 
-Stage 2 Status
-
-✔ Schema defined
-✔ Indexing included
-✔ Scaling issues identified
-✔ Solutions proposed
-
 
 Stage 3 — Query Optimization
 
@@ -159,9 +154,9 @@ SELECT * FROM notificationsWHERE studentID = 1042 AND isRead = falseORDER BY cre
 Problem
 
 
-Uses SELECT * → fetches unnecessary data
-No proper indexing → full table scan
-Sorting large dataset → slow
+Uses SELECT * -> fetches unnecessary data
+No proper indexing -> full table scan
+Sorting large dataset -> slow
 Not scalable for millions of records
 
 Optimized Query
@@ -186,7 +181,7 @@ Only index frequently queried fields
 Is adding indexes everywhere effective?
 No
 
-Over-indexing hurts performance
+Over indexing hurts performance
 Best practice: targeted indexing
 
 New Query (Placement in last 7 days)
@@ -201,11 +196,6 @@ Faster filtering using indexes
 Faster sorting
 Better scalability
 
-Stage 3 Status
- Query analyzed
- Optimized version provided
- Index strategy explained
- Additional query handled
 
 
 Stage 4 — Performance Optimization
@@ -220,12 +210,12 @@ Increased latency
 Poor user experience
 
 Solutions
-1. Caching (Redis)
+1 Caching (Redis)
 Store recent notifications in cache
 Serve from cache instead of DB
 Flow:
-First request → DB → store in cache
-Next requests → directly from cache
+First request -> DB -> store in cache
+Next requests -> directly from cache
 
 Pros:
 Very fast response
@@ -234,7 +224,7 @@ Cons:
 Cache invalidation complexity
 Slight data staleness
 
-2. Pagination & Lazy Loading
+2 Pagination & Lazy Loading
 Fetch limited notifications (e.g., 10–20)
 Load more only when needed
 
@@ -244,7 +234,7 @@ Faster UI
 Cons:
 Multiple API calls
 
-3. Real-Time Push (WebSockets)
+3 Real Time Push 
 Push notifications instead of fetching repeatedly
 
 Pros:
@@ -254,8 +244,8 @@ Cons:
 Complex implementation
 Requires persistent connections
 
-4. Background Processing (Queue)
-Use message queue (Kafka / RabbitMQ)
+4 Background Processing (Queue)
+Use message queue (Kafka / RabbitMQ )
 Process notifications asynchronously
 
 Pros:
@@ -264,7 +254,7 @@ Scalable
 Cons:
 Adds system complexity
 
-5. Read Replica Database
+5 Read Replica Database
 Use replica DB for read operations
 
 Pros:
@@ -273,7 +263,7 @@ Improves scalability
 Cons:
 Slight replication delay
 
-6. Precomputed Feeds
+6 Precomputed Feeds
 Store pre-sorted notifications per user
 
 Pros:
@@ -289,26 +279,19 @@ Use combination of:
 
 Redis caching
 Pagination
-WebSockets (for real-time)
+WebSockets 
 
 This gives:
 
 Fast response
 Low DB load
-Real-time experience
+Real time experience
 
 Final Impact
 Reduced DB queries
 Faster response time
 Better scalability
 Improved user experience
-
-Stage 4 Status
-
-Problem identified
-Multiple solutions proposed
-Trade-offs explained
-Final architecture suggested
 
 
 Stage 5 — Reliability & System Design
@@ -320,21 +303,26 @@ function notify_all(student_ids: array, message: string):
     save_to_db(student_id, message)
     push_to_app(student_id, message)
 
-👉 Issue observed:
+Issue observed:
 
-send_email failed midway → system breaks
+send_email failed midway -> system breaks
 Some users get notifications, others don’t
 Problems in Current Design
+
 Synchronous execution (slow)
 No retry mechanism
 No fault tolerance
 Tight coupling between services
 Partial failure leads to inconsistent state
+
 Improved Design
+
 Use Message Queue (Kafka / RabbitMQ)
 Decouple system into async tasks
 Each operation handled independently
-Revised Flow
+
+Revised Flow:
+
 function notify_all(student_ids, message) {
   for (let student_id of student_ids) {
     queue.publish({
@@ -343,7 +331,9 @@ function notify_all(student_ids, message) {
     });
   }
 }
-Worker System
+
+Worker System:
+
 worker.onMessage(async (job) => {
   try {
     await save_to_db(job.student_id, job.message);
@@ -353,21 +343,23 @@ worker.onMessage(async (job) => {
     retry(job);
   }
 });
-Key Improvements
-1. Asynchronous Processing
+
+Key Improvements:
+
+1 Asynchronous Processing
 No blocking
 Faster execution
-2. Retry Mechanism
+2 Retry Mechanism
 Failed jobs retried automatically
 Improves reliability
-3. Idempotency
+3 Idempotency
 Ensure duplicate processing doesn’t break system
-4. Fault Isolation
+4 Fault Isolation
 Email failure won’t affect DB or app notification
-5. Scalability
+5 Scalability
 Add more workers to handle load
-Should DB save and email happen together?
 
+Should DB save and email happen together??
 No
 
 Why:
@@ -380,8 +372,10 @@ Best practice:
 Save to DB first
 Then process async tasks
 Final Architecture
-Producer → Queue → Workers
+Producer -> Queue -> Workers
+
 Separate services:
+
 DB Service
 Email Service
 Notification Service
@@ -390,9 +384,3 @@ Reliable system
 No data loss
 Handles failures gracefully
 Scales for large loads
-Stage 5 Status
-
-✔ Problem analyzed
-✔ Failure scenario handled
-✔ Scalable architecture designed
-✔ Reliable system proposed
