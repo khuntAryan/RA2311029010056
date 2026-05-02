@@ -90,4 +90,65 @@ Complete API structure
 Covers CRUD operations
 Includes real-time approach
 
-🚀 Done
+Stage 2 — Database Design
+Chosen Database
+PostgreSQL (Relational DB)
+
+Schema Design
+Table: notifications
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY,
+  userId UUID NOT NULL,
+  type VARCHAR(20) NOT NULL,
+  message TEXT NOT NULL,
+  isRead BOOLEAN DEFAULT false,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Indexing (Important for performance)
+CREATE INDEX idx_user_read ON notifications(userId, isRead);
+CREATE INDEX idx_created_at ON notifications(createdAt DESC);
+CREATE INDEX idx_type ON notifications(type);
+
+Problems as Data Grows
+Millions of rows → slow queries
+Sorting (ORDER BY createdAt) becomes expensive
+Filtering unread notifications slows down
+DB gets overloaded with frequent reads
+
+Solutions
+1. Index Optimization
+Faster filtering on userId, isRead
+Speeds up unread queries
+2. Pagination
+SELECT * FROM notifications
+WHERE userId = 'xyz'
+ORDER BY createdAt DESC
+LIMIT 20 OFFSET 0;
+
+Avoid loading all data at once
+
+3. Caching (Redis)
+Store recent notifications in cache
+Reduce DB hits
+4. Partitioning
+Split table by userId or date
+Improves query speed
+5. Archiving Old Data
+Move old notifications to separate table
+Keep main table small
+
+Why PostgreSQL?
+Strong consistency
+Structured data fits well
+Supports indexing + scaling
+Easy querying with SQL
+
+
+Stage 2 Status
+
+✔ Schema defined
+✔ Indexing included
+✔ Scaling issues identified
+✔ Solutions proposed
+
