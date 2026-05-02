@@ -309,3 +309,90 @@ Problem identified
 Multiple solutions proposed
 Trade-offs explained
 Final architecture suggested
+
+
+Stage 5 — Reliability & System Design
+Given Problem
+
+function notify_all(student_ids: array, message: string):
+  for student_id in student_ids:
+    send_email(student_id, message)
+    save_to_db(student_id, message)
+    push_to_app(student_id, message)
+
+👉 Issue observed:
+
+send_email failed midway → system breaks
+Some users get notifications, others don’t
+Problems in Current Design
+Synchronous execution (slow)
+No retry mechanism
+No fault tolerance
+Tight coupling between services
+Partial failure leads to inconsistent state
+Improved Design
+Use Message Queue (Kafka / RabbitMQ)
+Decouple system into async tasks
+Each operation handled independently
+Revised Flow
+function notify_all(student_ids, message) {
+  for (let student_id of student_ids) {
+    queue.publish({
+      student_id,
+      message
+    });
+  }
+}
+Worker System
+worker.onMessage(async (job) => {
+  try {
+    await save_to_db(job.student_id, job.message);
+    await push_to_app(job.student_id, job.message);
+    await send_email(job.student_id, job.message);
+  } catch (err) {
+    retry(job);
+  }
+});
+Key Improvements
+1. Asynchronous Processing
+No blocking
+Faster execution
+2. Retry Mechanism
+Failed jobs retried automatically
+Improves reliability
+3. Idempotency
+Ensure duplicate processing doesn’t break system
+4. Fault Isolation
+Email failure won’t affect DB or app notification
+5. Scalability
+Add more workers to handle load
+Should DB save and email happen together?
+
+No
+
+Why:
+
+Email is external (can fail)
+DB must be reliable
+
+Best practice:
+
+Save to DB first
+Then process async tasks
+Final Architecture
+Producer → Queue → Workers
+Separate services:
+DB Service
+Email Service
+Notification Service
+Result
+Reliable system
+No data loss
+Handles failures gracefully
+Scales for large loads
+Stage 5 Status
+
+✔ Problem analyzed
+✔ Failure scenario handled
+✔ Scalable architecture designed
+✔ Reliable system proposed
