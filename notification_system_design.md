@@ -152,3 +152,57 @@ Stage 2 Status
 ✔ Scaling issues identified
 ✔ Solutions proposed
 
+
+Stage 3 — Query Optimization
+
+SELECT * FROM notificationsWHERE studentID = 1042 AND isRead = falseORDER BY createdAt DESC;
+Problem
+
+
+Uses SELECT * → fetches unnecessary data
+No proper indexing → full table scan
+Sorting large dataset → slow
+Not scalable for millions of records
+
+Optimized Query
+SELECT id, type, message, createdAtFROM notificationsWHERE studentID = 1042 AND isRead = falseORDER BY createdAt DESCLIMIT 20;
+
+Index Optimization
+CREATE INDEX idx_student_read_createdON notifications(studentID, isRead, createdAt DESC);
+This makes:
+Filtering fast
+Sorting fast
+Query scalable
+
+Should we add indexes on every column?
+No 
+
+Why?
+Slows down inserts/updates
+Consumes extra storage
+Not all columns are queried
+Only index frequently queried fields
+
+Is adding indexes everywhere effective?
+No
+
+Over-indexing hurts performance
+Best practice: targeted indexing
+
+New Query (Placement in last 7 days)
+SELECT *FROM notificationsWHERE type = 'Placement'AND createdAt >= NOW() - INTERVAL '7 days'; 
+
+Optimization for above query
+CREATE INDEX idx_type_createdON notifications(type, createdAt DESC);
+
+Improvements Achieved
+Reduced data fetch size
+Faster filtering using indexes
+Faster sorting
+Better scalability
+
+Stage 3 Status
+ Query analyzed
+ Optimized version provided
+ Index strategy explained
+ Additional query handled
