@@ -1,9 +1,12 @@
 const axios = require("axios");
 require("dotenv").config();
+
 const { Log, setToken } = require("./logging_middleware/logger");
 
+// store token
 let accessToken = "";
 
+// register once to get clientID and clientSecret
 async function register() {
   const res = await axios.post(`${process.env.BASE_URL}/register`, {
     email: "ak7895@srmist.edu.in",
@@ -17,6 +20,7 @@ async function register() {
   console.log("SAVE THIS:", res.data);
 }
 
+// get access token
 async function getToken(clientID, clientSecret) {
   const res = await axios.post(`${process.env.BASE_URL}/auth`, {
     email: "ak7895@srmist.edu.in",
@@ -31,6 +35,7 @@ async function getToken(clientID, clientSecret) {
   return accessToken;
 }
 
+// return auth header
 function getAuthHeader() {
   return {
     headers: {
@@ -39,27 +44,18 @@ function getAuthHeader() {
   };
 }
 
-(async () => {
-    try {
-      const token = await getToken("66272e2d-d27b-4084-81ae-d592001e3282", "QNEexVRUTGKpjDPr");
-  
-      console.log("Access Token:", token);
-      setToken(token);
-      await Log("backend", "info", "controller", "Testing logging middleware");
-      await testDepots(); 
-  
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    }
-  })();
-
-  async function testDepots() {
+// optional test function (manual use only)
+async function testDepots() {
+  try {
     const res = await axios.get(
       `${process.env.BASE_URL}/depots`,
       getAuthHeader()
     );
-  
-    console.log("Depots:", res.data);
-  }
 
-module.exports = { register, getToken, getAuthHeader };
+    console.log("Depots:", res.data);
+  } catch (err) {
+    console.error("Error fetching depots:", err.response?.data || err.message);
+  }
+}
+
+module.exports = { register, getToken, getAuthHeader, testDepots };

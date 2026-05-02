@@ -150,7 +150,7 @@ Easy querying with SQL
 
 Stage 3 — Query Optimization
 
-SELECT * FROM notificationsWHERE studentID = 1042 AND isRead = falseORDER BY createdAt DESC;
+SELECT * FROM notificationsWHERE studentID =  'USER_ID' AND isRead = falseORDER BY createdAt DESC;
 Problem
 
 

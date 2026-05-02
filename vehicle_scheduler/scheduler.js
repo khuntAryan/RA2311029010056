@@ -3,89 +3,120 @@ require("dotenv").config();
 
 const { getToken, getAuthHeader } = require("../auth");
 const { Log, setToken } = require("../logging_middleware/logger");
-require("dotenv").config();
 
+// fetch depots and vehicles from API
 async function fetchData() {
   try {
-    await Log("backend", "info", "service", "Fetching depots");
+    await Log("backend", "info", "service", "fetching depots");
 
     const depotRes = await axios.get(
       `${process.env.BASE_URL}/depots`,
       getAuthHeader()
     );
 
-    await Log("backend", "info", "service", "Fetching vehicles");
-    if (!vehicles || vehicles.length === 0) {
-        await Log("backend", "warn", "service", "No vehicles data found");
-        return;
-      }
+    await Log("backend", "info", "service", "fetching vehicles");
+
     const vehicleRes = await axios.get(
       `${process.env.BASE_URL}/vehicles`,
       getAuthHeader()
     );
 
-    return {
-      depots: depotRes.data.depots,
-      vehicles: vehicleRes.data.vehicles
-    };
+    const depots = depotRes.data.depots;
+    const vehicles = vehicleRes.data.vehicles;
+
+    // safety checks
+    if (!Array.isArray(depots) || depots.length === 0) {
+      await Log("backend", "warn", "service", "no depots data found");
+      return null;
+    }
+
+    if (!Array.isArray(vehicles) || vehicles.length === 0) {
+      await Log("backend", "warn", "service", "no vehicles data found");
+      return { depots, vehicles: [] };
+    }
+
+    return { depots, vehicles };
+
   } catch (err) {
-    await Log("backend", "error", "service", "Error fetching data");
+    await Log("backend", "error", "service", "error fetching data");
     console.error(err.response?.data || err.message);
+    return null;
   }
 }
 
+// knapsack logic
 function knapsack(tasks, maxHours) {
-    const n = tasks.length;
-  
-    const dp = Array.from({ length: n + 1 }, () =>
-      Array(maxHours + 1).fill(0)
-    );
-  
-    for (let i = 1; i <= n; i++) {
-      const { Duration, Impact } = tasks[i - 1];
-  
-      for (let w = 0; w <= maxHours; w++) {
-        if (Duration <= w) {
-          dp[i][w] = Math.max(
-            dp[i - 1][w],
-            Impact + dp[i - 1][w - Duration]
-          );
-        } else {
-          dp[i][w] = dp[i - 1][w];
-        }
+  const n = tasks.length;
+
+  const dp = Array.from({ length: n + 1 }, () =>
+    Array(maxHours + 1).fill(0)
+  );
+
+  for (let i = 1; i <= n; i++) {
+    const task = tasks[i - 1];
+
+    const duration = task.Duration ?? task.duration;
+    const impact = task.Impact ?? task.impact;
+
+    if (duration == null || impact == null) continue;
+
+    for (let w = 0; w <= maxHours; w++) {
+      if (duration <= w) {
+        dp[i][w] = Math.max(
+          dp[i - 1][w],
+          impact + dp[i - 1][w - duration]
+        );
+      } else {
+        dp[i][w] = dp[i - 1][w];
       }
     }
-  
-    return dp[n][maxHours];
   }
 
+  return dp[n][maxHours];
+}
 
-  async function runScheduler() {
-    const token = await getToken("66272e2d-d27b-4084-81ae-d592001e3282", "QNEexVRUTGKpjDPr");
+// main function
+async function runScheduler() {
+  try {
+    const token = await getToken(
+      process.env.CLIENT_ID,
+      process.env.CLIENT_SECRET
+    );
+
     setToken(token);
+
+    await Log("backend", "info", "service", "starting scheduler");
+
     const data = await fetchData();
-  
     if (!data) return;
-  
+
     const { depots, vehicles } = data;
-  
-    for (let depot of depots) {
+
+    // ✅ ONLY process API depots
+    for (const depot of depots) {
       const maxHours = depot.MechanicHours;
-  
+
+      if (maxHours == null) continue;
+
       const maxImpact = knapsack(vehicles, maxHours);
-  
-      console.log(
-        `Depot ${depot.ID} → Max Impact: ${maxImpact}`
-      );
-  
-      await Log(
-        "backend",
-        "info",
-        "service",
-        `Depot ${depot.ID} computed with impact ${maxImpact}`
-      );
+
+      console.log(`Depot ${depot.ID} → Max Impact: ${maxImpact}`);
+
+      try {
+        await Log(
+          "backend",
+          "info",
+          "service",
+          `depot ${depot.ID} computed with impact ${maxImpact}`
+        );
+      } catch (e) {
+        console.error("Log failed:", e.message);
+      }
     }
+
+  } catch (err) {
+    console.error("Scheduler failed:", err.message);
   }
-  
-  await Log("backend", "info", "service", "Starting scheduler execution");
-  runScheduler();
+}
+
+runScheduler();

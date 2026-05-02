@@ -1,23 +1,29 @@
 const axios = require("axios");
 require("dotenv").config();
 
+// this will store token after login
 let accessToken = "";
 
-// using auth js for token 
+// set token after getting it from auth.js
 function setToken(token) {
   accessToken = token;
 }
 
+// main logging function used everywhere
 async function Log(stack, level, pkg, message) {
   try {
-    const res = await axios.post(
+    // making request body
+    const payload = {
+      stack: stack.toLowerCase(),
+      level: level.toLowerCase(),
+      package: pkg.toLowerCase(),
+      message: message
+    };
+
+    // sending log to server
+    const response = await axios.post(
       `${process.env.BASE_URL}/logs`,
-      {
-        stack: stack.toLowerCase(),
-        level: level.toLowerCase(),
-        package: pkg.toLowerCase(),
-        message: message
-      },
+      payload,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`
@@ -25,9 +31,11 @@ async function Log(stack, level, pkg, message) {
       }
     );
 
-    console.log("Log success:", res.data.message);
-  } catch (err) {
-    console.error("Log failed:", err.response?.data || err.message);
+    console.log("Log success:", response.data.message);
+
+  } catch (error) {
+    // if log fails, print error but don't stop program
+    console.error("Log failed:", error.response?.data || error.message);
   }
 }
 
